@@ -1,0 +1,70 @@
+// AMR Surveillance Data Model
+// Paste this into https://dbdiagram.io to draw the entity-relationship diagram.
+
+Table animal_class {
+  animal_class_id integer [pk]
+  class_name text [not null, unique, note: 'Mammalia, Aves, Reptilia...']
+}
+
+Table host_species {
+  host_species_id integer [pk]
+  animal_class_id integer [not null, ref: > animal_class.animal_class_id]
+  scientific_name text [not null, unique]
+  common_name text
+}
+
+Table animal {
+  animal_id integer [pk]
+  host_species_id integer [not null, ref: > host_species.host_species_id]
+  sex text [note: 'M, F or U']
+}
+
+Table sample {
+  sample_id integer [pk]
+  animal_id integer [not null, ref: > animal.animal_id]
+  collection_date date [not null]
+  sample_type text [note: 'faeces, urine, wound swab...']
+}
+
+Table bacterium {
+  bacterium_id integer [pk]
+  scientific_name text [not null, unique]
+  gram_stain text [note: 'positive or negative']
+}
+
+Table isolate {
+  isolate_id integer [pk]
+  sample_id integer [not null, ref: > sample.sample_id]
+  bacterium_id integer [not null, ref: > bacterium.bacterium_id]
+}
+
+Table antimicrobial_class {
+  am_class_id integer [pk]
+  class_name text [not null, unique]
+}
+
+Table antimicrobial {
+  antimicrobial_id integer [pk]
+  name text [not null, unique]
+  am_class_id integer [not null, ref: > antimicrobial_class.am_class_id]
+  aware_category text [note: 'WHO AWaRe: Access, Watch or Reserve']
+}
+
+Table intrinsic_resistance {
+  bacterium_id integer [ref: > bacterium.bacterium_id]
+  antimicrobial_id integer [ref: > antimicrobial.antimicrobial_id]
+  source text [note: 'EUCAST Expected Resistant Phenotypes']
+  indexes {
+    (bacterium_id, antimicrobial_id) [pk]
+  }
+}
+
+Table ast_result {
+  isolate_id integer [ref: > isolate.isolate_id]
+  antimicrobial_id integer [ref: > antimicrobial.antimicrobial_id]
+  interpretation text [not null, note: 'S, I or R']
+  indexes {
+    (isolate_id, antimicrobial_id) [pk]
+  }
+  Note: 'Fact table. Grain: one isolate x one antimicrobial tested'
+}
